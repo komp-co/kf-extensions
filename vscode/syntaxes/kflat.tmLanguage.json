@@ -1,0 +1,310 @@
+{
+  "$schema": "https://raw.githubusercontent.com/martinring/tmlanguage/master/tmlanguage.json",
+  "name": "KFlat",
+  "scopeName": "source.kflat",
+  "fileTypes": [
+    "kf"
+  ],
+  "patterns": [
+    {
+      "include": "#comments"
+    },
+    {
+      "include": "#strings"
+    },
+    {
+      "include": "#annotations"
+    },
+    {
+      "include": "#imports"
+    },
+    {
+      "include": "#declarations"
+    },
+    {
+      "include": "#keywords"
+    },
+    {
+      "include": "#calls"
+    },
+    {
+      "include": "#properties"
+    },
+    {
+      "include": "#annotated-names"
+    },
+    {
+      "include": "#literals"
+    },
+    {
+      "include": "#types"
+    },
+    {
+      "include": "#operators"
+    }
+  ],
+  "repository": {
+    "comments": {
+      "patterns": [
+        {
+          "name": "comment.line.documentation.kflat",
+          "match": "///.*$"
+        },
+        {
+          "name": "comment.line.double-slash.kflat",
+          "match": "//.*$"
+        }
+      ]
+    },
+    "strings": {
+      "patterns": [
+        {
+          "name": "string.quoted.triple.kflat",
+          "begin": "\"\"\"",
+          "end": "\"\"\"(?!\")"
+        },
+        {
+          "name": "string.quoted.double.kflat",
+          "begin": "\"",
+          "end": "\"",
+          "patterns": [
+            {
+              "name": "constant.character.escape.kflat",
+              "match": "\\\\."
+            },
+            {
+              "include": "#interpolation"
+            }
+          ]
+        },
+        {
+          "name": "constant.character.kflat",
+          "match": "'(?:[^'\\\\]|\\\\.)'"
+        }
+      ]
+    },
+    "interpolation": {
+      "name": "meta.embedded.line.kflat",
+      "begin": "\\$\\{",
+      "end": "\\}",
+      "beginCaptures": {
+        "0": {
+          "name": "punctuation.section.embedded.begin.kflat"
+        }
+      },
+      "endCaptures": {
+        "0": {
+          "name": "punctuation.section.embedded.end.kflat"
+        }
+      },
+      "patterns": [
+        {
+          "include": "$self"
+        }
+      ]
+    },
+    "annotations": {
+      "name": "storage.type.annotation.kflat",
+      "match": "@[A-Za-z_][A-Za-z0-9_]*"
+    },
+    "imports": {
+      "match": "^\\s*(import)\\s+([A-Za-z_][A-Za-z0-9_]*(?:\\.[A-Za-z_][A-Za-z0-9_]*)*)(\\.\\*)?",
+      "captures": {
+        "1": {
+          "name": "keyword.control.import.kflat"
+        },
+        "2": {
+          "name": "entity.name.namespace.kflat"
+        },
+        "3": {
+          "name": "keyword.operator.wildcard.kflat"
+        }
+      }
+    },
+    "declarations": {
+      "patterns": [
+        {
+          "match": "\\b(fun)\\s+([A-Za-z_][A-Za-z0-9_]*)",
+          "captures": {
+            "1": {
+              "name": "storage.type.kflat"
+            },
+            "2": {
+              "name": "entity.name.function.kflat"
+            }
+          }
+        },
+        {
+          "match": "\\b(struct|enum|trait|impl)\\s+([A-Za-z_][A-Za-z0-9_]*)",
+          "captures": {
+            "1": {
+              "name": "storage.type.kflat"
+            },
+            "2": {
+              "name": "entity.name.type.kflat"
+            }
+          }
+        }
+      ]
+    },
+    "keywords": {
+      "patterns": [
+        {
+          "name": "storage.type.kflat",
+          "match": "\\b(?:fun|val|var|struct|enum|impl|trait|type)\\b"
+        },
+        {
+          "name": "keyword.control.kflat",
+          "match": "\\b(?:return|if|else|while|when|break|continue|for|in)\\b"
+        },
+        {
+          "name": "constant.language.kflat",
+          "match": "\\b(?:true|false)\\b"
+        },
+        {
+          "name": "keyword.control.import.kflat",
+          "match": "\\b(?:import)\\b"
+        },
+        {
+          "name": "storage.modifier.kflat",
+          "match": "\\b(?:pub|extern|mutating|static|unsafe|dyn)\\b"
+        },
+        {
+          "name": "keyword.operator.cast.kflat",
+          "match": "\\b(?:as)\\b"
+        }
+      ]
+    },
+    "calls": {
+      "patterns": [
+        {
+          "name": "entity.name.function.call.kflat",
+          "match": "\\b[a-z_][A-Za-z0-9_]*(?=\\s*\\()"
+        },
+        {
+          "name": "entity.name.function.call.kflat",
+          "match": "\\b[a-z_][A-Za-z0-9_]*(?=\\s*<[^<>()]*(?:<[^<>()]*>)?[^<>()]*>\\s*\\()"
+        }
+      ]
+    },
+    "annotated-names": {
+      "name": "variable.parameter.kflat",
+      "match": "\\b[a-z_][A-Za-z0-9_]*(?=\\s*:)"
+    },
+    "properties": {
+      "match": "(\\.)([a-z_][A-Za-z0-9_]*)\\b(?!\\s*(?:<[^<>()]*(?:<[^<>()]*>)?[^<>()]*>\\s*)?\\()",
+      "captures": {
+        "1": {
+          "name": "punctuation.accessor.kflat"
+        },
+        "2": {
+          "name": "variable.other.property.kflat"
+        }
+      }
+    },
+    "literals": {
+      "patterns": [
+        {
+          "name": "constant.numeric.integer.kflat",
+          "match": "\\b0[xXbBoO][0-9A-Fa-f_]+\\b"
+        },
+        {
+          "name": "constant.numeric.float.kflat",
+          "match": "\\b[0-9]+\\.[0-9]+\\b"
+        },
+        {
+          "name": "constant.numeric.integer.kflat",
+          "match": "\\b[0-9]+_[0-9_]*\\b"
+        },
+        {
+          "name": "constant.numeric.integer.kflat",
+          "match": "\\b[0-9]+\\b"
+        }
+      ]
+    },
+    "types": {
+      "patterns": [
+        {
+          "name": "variable.language.self.kflat",
+          "match": "\\bself\\b"
+        },
+        {
+          "name": "support.type.builtin.kflat",
+          "match": "\\b(?:String|str|List|Option|Box|Ptr|bool|char|void|int8|int16|int32|int64|uint8|uint16|uint32|uint64|float32|float64)\\b"
+        },
+        {
+          "name": "entity.name.type.kflat",
+          "match": "\\b[A-Z][A-Za-z0-9_]*\\b"
+        }
+      ]
+    },
+    "operators": {
+      "patterns": [
+        {
+          "name": "keyword.operator.range.kflat",
+          "match": "\\.\\.="
+        },
+        {
+          "name": "keyword.operator.comparison.kflat",
+          "match": "==|!=|<=|>="
+        },
+        {
+          "name": "keyword.operator.range.kflat",
+          "match": "\\.\\."
+        },
+        {
+          "name": "keyword.operator.arrow.kflat",
+          "match": "=>"
+        },
+        {
+          "name": "keyword.operator.logical.kflat",
+          "match": "&&|\\|\\|"
+        },
+        {
+          "name": "keyword.operator.bitwise.kflat",
+          "match": "<<"
+        },
+        {
+          "name": "keyword.operator.optional.kflat",
+          "match": "\\?:|!!|\\?\\."
+        },
+        {
+          "name": "keyword.operator.arithmetic.kflat",
+          "match": "\\+|-|\\*|/|%"
+        },
+        {
+          "name": "keyword.operator.assignment.kflat",
+          "match": "="
+        },
+        {
+          "name": "keyword.operator.comparison.kflat",
+          "match": "<|>"
+        },
+        {
+          "name": "punctuation.brackets.kflat",
+          "match": "\\(|\\)|\\{|\\}|\\[|\\]"
+        },
+        {
+          "name": "punctuation.separator.kflat",
+          "match": ",|:|;"
+        },
+        {
+          "name": "punctuation.accessor.kflat",
+          "match": "\\."
+        },
+        {
+          "name": "keyword.operator.bitwise.kflat",
+          "match": "&|\\||\\^"
+        },
+        {
+          "name": "keyword.operator.logical.kflat",
+          "match": "!"
+        },
+        {
+          "name": "keyword.operator.optional.kflat",
+          "match": "\\?"
+        }
+      ]
+    }
+  }
+}
