@@ -3,7 +3,8 @@
 // Generates syntaxes/kflat.tmLanguage.json from komp's own lexer tables.
 //
 // Keyword spellings come from `kw_str`, operator spellings from `op_str`,
-// builtin type names from `is_runtime_type_name` — the same tables the
+// builtin type names from `is_runtime_type_name` and the library types
+// marked `@lang` — the same tables the
 // compiler lexes and diagnoses with. Nothing here restates a spelling, so
 // the grammar cannot drift from the language the way a hand-written one
 // does. Adding a keyword or operator upstream makes this script fail until
@@ -28,6 +29,7 @@ const LEXER = path.join(REPO, 'compiler', 'kf-parse', 'src', 'lexer');
 const KEYWORD_KF = path.join(LEXER, 'keyword.kf');
 const OPERATOR_KF = path.join(LEXER, 'operator.kf');
 const LINKAGE_KF = path.join(REPO, 'compiler', 'kf-core', 'src', 'ast', 'linkage.kf');
+const LIBS = path.join(REPO, 'libs');
 
 // ------------------------------------------------------------ reading komp
 
@@ -79,12 +81,31 @@ function enumVariants(src, name, file) {
     });
 }
 
-/// The string literals compared in `is_runtime_type_name`.
+/// The string literals `is_runtime_type_name` maps to `true`.
 function runtimeTypeNames(src) {
   const body = funBody(src, 'is_runtime_type_name', LINKAGE_KF);
-  const names = [...body.matchAll(/if\s+s\s*==\s*"(\w+)"/g)].map((m) => m[1]);
+  const names = [...body.matchAll(/"(\w+)"\s*=>\s*true/g)].map((m) => m[1]);
   if (names.length === 0) fail('is_runtime_type_name yielded no names — its shape changed');
   return names;
+}
+
+/// The structs and enums the libraries mark `@lang`: `String`, `List` and
+/// `Option` today, under whatever names the library gives them.
+function langTypeNames() {
+  const names = [];
+  const visit = (dir) => {
+    for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
+      const p = path.join(dir, entry.name);
+      if (entry.isDirectory()) visit(p);
+      else if (entry.name.endsWith('.kf') && !entry.name.endsWith('_test.kf')) {
+        const marked = /@lang\("\w+"\)\s*\n(?:\s*(?:\/\/.*|@\w.*)\n)*\s*(?:pub\s+)?(?:struct|enum)\s+(\w+)/g;
+        for (const m of read(p).matchAll(marked)) names.push(m[1]);
+      }
+    }
+  };
+  visit(LIBS);
+  if (names.length === 0) fail('no struct or enum in libs/ is marked @lang — its shape changed');
+  return names.sort();
 }
 
 // ------------------------------------------------------- spelling → scope
@@ -200,7 +221,7 @@ function build() {
   const scopedKeywords = scopeAll(keywords.map((k) => k.spelling), KEYWORD_SCOPES, 'keyword');
   const scopedOperators = scopeAll(operators.map((o) => o.spelling), OPERATOR_SCOPES, 'operator');
 
-  const builtinTypes = runtimeTypeNames(read(LINKAGE_KF));
+  const builtinTypes = [...langTypeNames(), ...runtimeTypeNames(read(LINKAGE_KF))];
 
   // Keywords are `\b`-delimited, so one alternation per scope is enough —
   // no keyword is a prefix of another once whole words are required.
