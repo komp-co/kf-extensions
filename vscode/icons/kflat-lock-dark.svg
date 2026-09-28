@@ -1,5 +1,5 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" width="32" height="32">
-  <mask id="gap"><rect width="32" height="32" fill="#fff"/><rect x="17.5" y="17" width="14" height="14.5" rx="2.5" fill="#000"/></mask>
+  <mask id="gap"><rect width="32" height="32" fill="#fff"/><rect x="17.5" y="21.5" width="14" height="11" rx="3" fill="#000"/><path d="M21.5 23 v-2.2 a3 3 0 0 1 6 0 V23" stroke="#000" stroke-width="5" fill="none"/></mask>
   <g mask="url(#gap)"><g transform="scale(0.84)"><g transform="translate(-2 -1)">
     <polygon fill="#a37d58" points="10,9.5 14.5,5 22.5,5.5 29.5,13.5 28,24 19,29 11,26 8.5,16.5"/>
     <polygon fill="#c7a47f" points="10,9.5 14.5,5 14.8,5.1 14.6,12"/>
