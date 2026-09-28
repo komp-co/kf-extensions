@@ -32,7 +32,67 @@
         "extensions": [
           ".kf"
         ],
-        "configuration": "./language-configuration.json"
+        "configuration": "./language-configuration.json",
+        "icon": {
+          "light": "./icons/kflat-light.svg",
+          "dark": "./icons/kflat-dark.svg"
+        }
+      },
+      {
+        "id": "kflat-test",
+        "aliases": [
+          "KFlat Test"
+        ],
+        "filenamePatterns": [
+          "*_test.kf"
+        ],
+        "configuration": "./language-configuration.json",
+        "icon": {
+          "light": "./icons/kflat-test-light.svg",
+          "dark": "./icons/kflat-test-dark.svg"
+        }
+      },
+      {
+        "id": "kflat-manifest",
+        "aliases": [
+          "KFlat Manifest"
+        ],
+        "filenames": [
+          "kf.toml"
+        ],
+        "icon": {
+          "light": "./icons/kflat-manifest-light.svg",
+          "dark": "./icons/kflat-manifest-dark.svg"
+        },
+        "configuration": "./toml-configuration.json"
+      },
+      {
+        "id": "kflat-lock",
+        "aliases": [
+          "KFlat Lockfile"
+        ],
+        "filenames": [
+          "kf.lock"
+        ],
+        "icon": {
+          "light": "./icons/kflat-lock-light.svg",
+          "dark": "./icons/kflat-lock-dark.svg"
+        },
+        "configuration": "./toml-configuration.json"
+      },
+      {
+        "id": "kflat-lints",
+        "aliases": [
+          "KFlat Lints"
+        ],
+        "filenames": [
+          "lint.toml"
+        ],
+        "icon": {
+          "light": "./icons/kflat-lint-light.svg",
+          "dark": "./icons/kflat-lint-dark.svg"
+        },
+        "configuration": "./toml-configuration.json"
       }
     ],
     "grammars": [
@@ -40,6 +100,26 @@
         "language": "kflat",
         "scopeName": "source.kflat",
         "path": "./syntaxes/kflat.tmLanguage.json"
+      },
+      {
+        "language": "kflat-test",
+        "scopeName": "source.kflat",
+        "path": "./syntaxes/kflat.tmLanguage.json"
+      },
+      {
+        "language": "kflat-manifest",
+        "scopeName": "source.toml.kflat",
+        "path": "./syntaxes/kflat-toml.tmLanguage.json"
+      },
+      {
+        "language": "kflat-lock",
+        "scopeName": "source.toml.kflat",
+        "path": "./syntaxes/kflat-toml.tmLanguage.json"
+      },
+      {
+        "language": "kflat-lints",
+        "scopeName": "source.toml.kflat",
+        "path": "./syntaxes/kflat-toml.tmLanguage.json"
       }
     ],
     "commands": [
@@ -98,10 +178,11 @@
   },
   "scripts": {
     "generate-grammar": "node scripts/generate-grammar.js",
-    "test": "node scripts/generate-grammar.js --check && node scripts/test-grammar.js && node scripts/test-staleness.js"
+    "test": "node scripts/generate-grammar.js --check && node scripts/test-grammar.js && node scripts/test-toml-grammar.js && node scripts/test-staleness.js"
   },
   "devDependencies": {
     "vscode-oniguruma": "^2.0.1",
     "vscode-textmate": "^9.0.0"
-  }
+  },
+  "icon": "images/icon.png"
 }
