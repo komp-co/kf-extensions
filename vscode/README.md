@@ -6,6 +6,24 @@ expand-selection, signature help, completion, rename, go-to-definition,
 find-references and semantic highlighting from `komp query`. No runtime
 dependencies.
 
+## File icons
+
+| File | Icon | Language id |
+|---|---|---|
+| `*.kf` | the folded K | `kflat` |
+| `*_test.kf` | the K with a check | `kflat-test` |
+| `kf.toml` | the paper kiwi | `kflat-manifest` |
+| `kf.lock` | the kiwi with a lock | `kflat-lock` |
+| `lint.toml` | the kiwi with a list | `kflat-lints` |
+
+VS Code gives an icon per language, so a test file and each of komp's files
+is a language of its own; the test language shares the KFlat grammar and
+every editor feature. The default Seti icon theme and the minimal theme show
+these icons; a theme with its own table shows its own. The three komp files
+are highlighted by the TOML grammar in `syntaxes/kflat-toml.tmLanguage.json`,
+which takes precedence over another extension's TOML support for those three
+names only.
+
 ## Install
 
 The extension is a plain folder, so linking it into the extensions directory

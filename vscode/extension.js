@@ -100,8 +100,10 @@ function deactivate() {
   rootCache.clear();
 }
 
-const KFLAT = { language: 'kflat' };
-const isKflat = (doc) => doc.languageId === 'kflat' && doc.uri.scheme === 'file';
+// A test file is its own language only so it can carry its own icon.
+const KFLAT_LANGUAGES = ['kflat', 'kflat-test'];
+const KFLAT = KFLAT_LANGUAGES.map((language) => ({ language }));
+const isKflat = (doc) => KFLAT_LANGUAGES.includes(doc.languageId) && doc.uri.scheme === 'file';
 const config = () => vscode.workspace.getConfiguration('kflat');
 
 /// An added or removed kf.toml changes which crate a file belongs to.

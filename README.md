@@ -1,3 +1,5 @@
+<img src="brand/kiwi.svg" width="96" alt="The KFlat paper kiwi">
+
 # kf-extensions
 
 Editor extensions for [KFlat](https://github.com/komp-co/komp).

@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" width="32" height="32">
+  <mask id="gap"><rect width="32" height="32" fill="#fff"/><circle cx="24.5" cy="24.5" r="7.5" fill="#000"/></mask>
+  <g mask="url(#gap)"><g transform="scale(0.84)"><g transform="translate(-2 -1)">
+    <polygon fill="#7a5536" points="10,9.5 14.5,5 22.5,5.5 29.5,13.5 28,24 19,29 11,26 8.5,16.5"/>
+    <polygon fill="#a07a55" points="10,9.5 14.5,5 14.8,5.1 14.6,12"/>
+    <polygon fill="#a07a55" points="8.5,16.5 10,9.5 14.6,12 14.5,21"/>
+    <polygon fill="#a07a55" points="19.6,5.35 22.5,5.5 23.5,6.6 19.4,12.6"/>
+    <polygon fill="#5e4029" points="14.8,5.1 19.6,5.35 19.1,28.6 14.3,27.3"/>
+    <polygon fill="#5e4029" points="19.4,12.6 23.5,6.6 27.4,11.1 19.3,19.2"/>
+    <polygon fill="#5e4029" points="19.3,15.8 27,24.6 22.6,27 19.2,21.5"/>
+    <polygon fill="#e9b8a2" points="10.4,10.2 3.6,16 10.2,14.6"/>
+    <circle cx="12.6" cy="10.9" r="1.35" fill="#1a110a"/>
+  </g></g></g>
+  <circle cx="24.5" cy="24.5" r="6" fill="#2f7a3b"/>
+  <path d="M21.8 22.3 h5.4 M21.8 24.5 h5.4 M21.8 26.7 h3.4" stroke="#fff" stroke-width="1.4" stroke-linecap="round"/>
+</svg>
