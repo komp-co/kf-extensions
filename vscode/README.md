@@ -66,7 +66,7 @@ when the working directory happens to be the repository root.
 
 ## How it works
 
-**Diagnostics.** On open and save, `komp check --diagnostic-format=json` runs
+**Diagnostics.** On open and save, `komp check --format=json` runs
 on the file's crate — the nearest ancestor holding a `kf.toml` — and its
 newline-delimited JSON is republished as VS Code diagnostics. The extension
 never parses `.kf`; the compiler decides what is an error. One check runs per
