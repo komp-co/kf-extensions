@@ -3,7 +3,7 @@
 // selection, signature help, go-to-definition, find-references and
 // semantic highlighting for VS Code.
 //
-// Runs `komp check --diagnostic-format=json` on a saved file's crate — the
+// Runs `komp check --format=json` on a saved file's crate — the
 // nearest ancestor holding a kf.toml — and publishes what it reports, and
 // `komp query` for the outline, the folds, the expand-selection chain, and
 // the types behind hover and inlay hints. The extension never parses .kf
@@ -192,7 +192,7 @@ function run(root, done) {
   // directory.
   execFile(
     bin,
-    ['check', '--diagnostic-format=json', root],
+    ['check', '--format=json', root],
     { cwd: root, timeout, maxBuffer: 32 * 1024 * 1024 },
     (error, stdout, stderr) => {
       if (error && error.code === 'ENOENT') {
