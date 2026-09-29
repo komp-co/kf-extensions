@@ -9,10 +9,24 @@ import {
   LanguageClientOptions,
   ServerOptions,
   State,
+  StaticFeature,
 } from 'vscode-languageclient/node';
 
 /** Every language the server answers for, by the ids package.json gives. */
 export const SERVED_LANGUAGES = ['kflat', 'kflat-test', 'kflat-manifest', 'kflat-lints'];
+
+/**
+ * Tells the server this client runs the Run and Test lenses' commands,
+ * `kflat.run` and `kflat.test`, which extension.ts registers.
+ */
+const runCommands: StaticFeature = {
+  fillClientCapabilities(capabilities) {
+    capabilities.experimental = { ...(capabilities.experimental ?? {}), kflatRunCommands: true };
+  },
+  initialize() {},
+  getState: () => ({ kind: 'static' }),
+  clear() {},
+};
 
 /** The most times a server that crashed is started again in one session. */
 const MAX_RESTARTS = 5;
@@ -48,11 +62,9 @@ export function createClient(output: vscode.LogOutputChannel): LanguageClient {
         return { action: CloseAction.Restart };
       },
     },
-    synchronize: {
-      fileEvents: vscode.workspace.createFileSystemWatcher('**/{kf.toml,kf.lock,lint.toml}'),
-    },
   };
   const client = new LanguageClient('kflat', 'KFlat', serverOptions, clientOptions);
+  client.registerFeature(runCommands);
   client.onDidChangeState((event) => {
     if (event.newState === State.Running) answered = true;
   });

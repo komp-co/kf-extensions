@@ -59,9 +59,12 @@ Development Host; `npm run compile` rebuilds `dist/extension.js`.
 For `.kf` files: diagnostics as you type, with the compiler's fixes as quick
 fixes; the outline, folding and expand-selection; hover, go-to-definition,
 find-references and rename; signature help, completion, inlay hints and
-semantic highlighting. For `kf.toml` and `lint.toml`: package, version,
-toolchain and lint completion, and hover and inlay hints with each
-dependency's locked, allowed and newest versions. The server's README in
+semantic highlighting; Format Document through `komp fmt`; and a Run lens
+above `main` and a Test lens above each `@test`, which run as komp tasks. For
+`kf.toml` and `lint.toml`: package, version, toolchain and lint completion,
+hover and inlay hints with each dependency's locked, allowed and newest
+versions, diagnostics with a quick fix that raises a requirement, and Fetch
+and Update all lenses. The server's README in
 [kf-lsp](https://github.com/komp-co/kf-lsp) has the detail.
 
 VS Code usually suggests only outside strings; in `kf.toml` and `lint.toml`

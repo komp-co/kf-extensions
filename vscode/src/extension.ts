@@ -4,7 +4,7 @@ import * as vscode from 'vscode';
 import { LanguageClient } from 'vscode-languageclient/node';
 import { createClient } from './client';
 import { offerInstall } from './install';
-import { KompTaskProvider } from './tasks';
+import { KompTaskProvider, runLens } from './tasks';
 
 let client: LanguageClient | undefined;
 let output: vscode.LogOutputChannel;
@@ -15,6 +15,8 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
     output,
     vscode.tasks.registerTaskProvider('komp', new KompTaskProvider()),
     vscode.commands.registerCommand('kflat.restartServer', () => restart()),
+    vscode.commands.registerCommand('kflat.run', (dir: string) => runLens(dir)),
+    vscode.commands.registerCommand('kflat.test', (dir: string, name: string) => runLens(dir, name)),
     vscode.workspace.onDidChangeConfiguration((event) => {
       if (event.affectsConfiguration('kflat.kompPath')) void restart();
     }),

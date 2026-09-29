@@ -9,6 +9,8 @@ import { kompPath } from './client';
 interface KompTaskDefinition extends vscode.TaskDefinition {
   command: string;
   crate?: string;
+  /** For `test`: run only the cases whose name contains it. */
+  case?: string;
 }
 
 const COMMANDS: { command: string; group?: vscode.TaskGroup }[] = [
@@ -22,7 +24,9 @@ const COMMANDS: { command: string; group?: vscode.TaskGroup }[] = [
 export function kompTask(folder: vscode.WorkspaceFolder, definition: KompTaskDefinition): vscode.Task {
   const crate = definition.crate ?? '.';
   const args = [...definition.command.split(' '), crate];
-  const name = crate === '.' ? definition.command : `${definition.command} ${crate}`;
+  if (definition.case) args.push('--case', definition.case);
+  let name = crate === '.' ? definition.command : `${definition.command} ${crate}`;
+  if (definition.case) name += ` --case ${definition.case}`;
   const execution = new vscode.ProcessExecution(kompPath(), args, { cwd: folder.uri.fsPath });
   const task = new vscode.Task(definition, folder, name, 'komp', execution, '$komp');
   task.group = COMMANDS.find((c) => c.command === definition.command)?.group;
@@ -38,6 +42,23 @@ async function crates(folder: vscode.WorkspaceFolder): Promise<string[]> {
   return found
     .map((uri) => path.relative(folder.uri.fsPath, path.dirname(uri.fsPath)) || '.')
     .sort();
+}
+
+/**
+ * What the server's Run and Test lenses ask for: `komp run <dir>`, or
+ * `komp test <dir> --case <name>`, as a task in the folder holding `dir`.
+ */
+export async function runLens(dir: string, testName?: string): Promise<void> {
+  const folder = vscode.workspace.getWorkspaceFolder(vscode.Uri.file(dir));
+  if (!folder) {
+    void vscode.window.showErrorMessage(`KFlat: ${dir} is not in an open workspace folder`);
+    return;
+  }
+  const crate = path.relative(folder.uri.fsPath, dir) || '.';
+  const definition: KompTaskDefinition = testName
+    ? { type: 'komp', command: 'test', crate, case: testName }
+    : { type: 'komp', command: 'run', crate };
+  await vscode.tasks.executeTask(kompTask(folder, definition));
 }
 
 export class KompTaskProvider implements vscode.TaskProvider {

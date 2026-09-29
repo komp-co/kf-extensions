@@ -184,6 +184,10 @@
           "crate": {
             "type": "string",
             "description": "The crate directory, relative to the workspace folder; the folder itself when left out."
+          },
+          "case": {
+            "type": "string",
+            "description": "For test: run only the cases whose name contains it."
           }
         }
       }
