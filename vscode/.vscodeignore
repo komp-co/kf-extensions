@@ -1,4 +1,8 @@
 .vscodeignore
+.gitignore
+src/
 node_modules/**
-scripts/test-grammar.js
-scripts/test-toml-grammar.js
+scripts/
+tsconfig.json
+.vscode/
+**/*.map

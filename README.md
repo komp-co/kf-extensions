@@ -6,7 +6,7 @@ Editor extensions for [KFlat](https://github.com/komp-co/komp).
 
 | Directory | Editor |
 |---|---|
-| [`vscode/`](vscode/) | Visual Studio Code: highlighting, diagnostics, and hover, completion, rename and the rest through `komp query` |
+| [`vscode/`](vscode/) | Visual Studio Code: a client of `komp lsp`, with highlighting and komp tasks |
 
 The highlighting grammar is generated from the compiler's own lexer tables, so
 the generator reads a komp checkout: `komp` beside this repository, or the one
