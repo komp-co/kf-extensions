@@ -34,6 +34,7 @@ const CASES = [
   ['val v = opt ?: return 0', [['?:', 'keyword.operator.optional.kflat']]],
   ['val v: int32? = x', [['?', 'keyword.operator.optional.kflat']]],
   ['    Some(k) => { }', [['=>', 'keyword.operator.arrow.kflat']]],
+  ['val f: (int32) -> int32 = twice', [['->', 'keyword.operator.arrow.kflat']]],
   ['val a = b && c || d', [['&&', 'keyword.operator.logical.kflat'], ['||', 'keyword.operator.logical.kflat']]],
   ['val a = b & c | d', [['&', 'keyword.operator.bitwise.kflat'], ['|', 'keyword.operator.bitwise.kflat']]],
   ['val a = b != c', [['!=', 'keyword.operator.comparison.kflat']]],
