@@ -139,7 +139,7 @@ const OPERATOR_SCOPES = {
   // does in the lexer: longest match wins.
   'keyword.operator.optional.kflat': ['?:', '?.', '?', '!!'],
   'keyword.operator.range.kflat': ['..=', '..'],
-  'keyword.operator.arrow.kflat': ['=>'],
+  'keyword.operator.arrow.kflat': ['=>', '->'],
   'punctuation.accessor.kflat': ['.'],
   'punctuation.separator.kflat': [',', ':', ';'],
   'punctuation.brackets.kflat': ['(', ')', '{', '}', '[', ']'],
