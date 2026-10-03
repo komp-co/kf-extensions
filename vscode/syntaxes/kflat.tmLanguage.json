@@ -61,7 +61,12 @@
         {
           "name": "string.quoted.triple.kflat",
           "begin": "\"\"\"",
-          "end": "\"\"\"(?!\")"
+          "end": "\"\"\"(?!\")",
+          "patterns": [
+            {
+              "include": "#interpolation"
+            }
+          ]
         },
         {
           "name": "string.quoted.double.kflat",
@@ -98,6 +103,31 @@
         }
       },
       "patterns": [
+        {
+          "include": "#braced"
+        },
+        {
+          "include": "$self"
+        }
+      ]
+    },
+    "braced": {
+      "begin": "\\{",
+      "end": "\\}",
+      "beginCaptures": {
+        "0": {
+          "name": "punctuation.brackets.kflat"
+        }
+      },
+      "endCaptures": {
+        "0": {
+          "name": "punctuation.brackets.kflat"
+        }
+      },
+      "patterns": [
+        {
+          "include": "#braced"
+        },
         {
           "include": "$self"
         }

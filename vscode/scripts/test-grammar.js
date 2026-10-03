@@ -108,8 +108,17 @@ const CASES = [
     ['}', 'punctuation.section.embedded.end.kflat'],
     ['\\n', 'constant.character.escape.kflat'],
   ]],
-  // Triple-quoted strings are raw: a slot in one is content, not code.
-  ['val s = """no ${x} here"""', [['no ${x} here', 'string.quoted.triple.kflat']]],
+  // Triple-quoted strings are raw, but a slot in one is still code.
+  ['val s = """a ${x} b"""', [
+    ['${', 'punctuation.section.embedded.begin.kflat'],
+    ['x', 'meta.embedded.line.kflat'],
+  ]],
+  ['val s = """a \\n b"""', [['a \\n b', 'string.quoted.triple.kflat']]],
+  // A block's `}` inside a slot does not close the slot.
+  ['val s = "${if a { b } else { c }} tail"', [
+    ['else', 'keyword.control.kflat'],
+    [' tail', 'string.quoted.double.kflat'],
+  ]],
   // A run of four closes on its last three, so this holds `say "hi"`.
   ['val s = """say "hi""""', [['say "hi"', 'string.quoted.triple.kflat']]],
 ];

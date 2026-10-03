@@ -274,13 +274,14 @@ function build() {
 
       strings: {
         patterns: [
-          // Triple-quoted strings are raw: no escapes, no interpolation.
-          // A run of four or more quotes closes on its *last* three, so
+          // Triple-quoted strings are raw: no escapes, but `${` still opens a
+          // slot. A run of four or more quotes closes on its *last* three, so
           // `"""say "hi""""` holds `say "hi"` — hence the lookahead.
           {
             name: 'string.quoted.triple.kflat',
             begin: '"""',
             end: '"""(?!")',
+            patterns: [{ include: '#interpolation' }],
           },
           {
             name: 'string.quoted.double.kflat',
@@ -309,7 +310,16 @@ function build() {
         end: '\\}',
         beginCaptures: { 0: { name: 'punctuation.section.embedded.begin.kflat' } },
         endCaptures: { 0: { name: 'punctuation.section.embedded.end.kflat' } },
-        patterns: [{ include: '$self' }],
+        patterns: [{ include: '#braced' }, { include: '$self' }],
+      },
+
+      // A `{ ... }` inside a slot, so its `}` does not close the slot.
+      braced: {
+        begin: '\\{',
+        end: '\\}',
+        beginCaptures: { 0: { name: 'punctuation.brackets.kflat' } },
+        endCaptures: { 0: { name: 'punctuation.brackets.kflat' } },
+        patterns: [{ include: '#braced' }, { include: '$self' }],
       },
 
       annotations: {
