@@ -230,7 +230,7 @@
         },
         {
           "name": "support.type.builtin.kflat",
-          "match": "\\b(?:List|Option|String|str|Box|Ptr|bool|char|void|int8|int16|int32|int64|uint8|uint16|uint32|uint64|float32|float64)\\b"
+          "match": "\\b(?:Array|List|Option|String|str|Box|Ptr|bool|char|void|int8|int16|int32|int64|uint8|uint16|uint32|uint64|float32|float64)\\b"
         },
         {
           "name": "entity.name.type.kflat",
@@ -254,7 +254,7 @@
         },
         {
           "name": "keyword.operator.arrow.kflat",
-          "match": "=>"
+          "match": "=>|->"
         },
         {
           "name": "keyword.operator.logical.kflat",
