@@ -1,4 +1,4 @@
-.vscodeignore
-node_modules/**
-scripts/test-grammar.js
-scripts/test-toml-grammar.js
+.gitignore
+.vscode-test/**
+scripts/**
+test/**

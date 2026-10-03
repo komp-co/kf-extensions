@@ -1,0 +1,6 @@
+import core.assert.assert_eq
+
+@test
+fun twice_doubles(): void {
+    assert_eq(twice(3), 6, "doubled")
+}
