@@ -1,8 +1,8 @@
 {
   "name": "vscode-kflat",
   "displayName": "KFlat",
-  "description": "KFlat language support: syntax highlighting generated from komp's lexer tables, diagnostics from komp check, and an outline, folding ranges, hover and inlay hints from komp query.",
-  "version": "0.1.0",
+  "description": "KFlat language support: highlighting generated from komp's lexer tables, and diagnostics, hover, completion, navigation, rename and the rest from the language server, komp lsp.",
+  "version": "0.2.0",
   "publisher": "kflat",
   "license": "MIT",
   "repository": {
@@ -11,7 +11,7 @@
     "directory": "vscode"
   },
   "engines": {
-    "vscode": "^1.75.0"
+    "vscode": "^1.91.0"
   },
   "categories": [
     "Programming Languages",
@@ -19,7 +19,11 @@
   ],
   "main": "./extension.js",
   "activationEvents": [
-    "workspaceContains:**/kf.toml"
+    "workspaceContains:**/kf.toml",
+    "onLanguage:kflat",
+    "onLanguage:kflat-test",
+    "onLanguage:kflat-manifest",
+    "onLanguage:kflat-lints"
   ],
   "contributes": {
     "languages": [
@@ -124,8 +128,16 @@
     ],
     "commands": [
       {
-        "command": "kflat.check",
-        "title": "KFlat: Run komp check on this crate"
+        "command": "kflat.restartServer",
+        "title": "KFlat: Restart the language server"
+      },
+      {
+        "command": "kflat.run",
+        "title": "KFlat: Run the crate"
+      },
+      {
+        "command": "kflat.test",
+        "title": "KFlat: Run one test"
       }
     ],
     "configuration": {
@@ -134,32 +146,22 @@
         "kflat.kompPath": {
           "type": "string",
           "default": "komp",
-          "markdownDescription": "Path to the `komp` binary. Resolved on `PATH` when left as a bare name."
-        },
-        "kflat.checkOnSave": {
-          "type": "boolean",
-          "default": true,
-          "description": "Run komp check on the file's crate when a .kf file is saved."
-        },
-        "kflat.checkOnOpen": {
-          "type": "boolean",
-          "default": true,
-          "description": "Run komp check when a .kf file is opened."
-        },
-        "kflat.checkTimeoutMs": {
-          "type": "number",
-          "default": 60000,
-          "description": "Milliseconds before a running komp check is killed."
-        },
-        "kflat.queryTimeoutMs": {
-          "type": "number",
-          "default": 30000,
-          "description": "Milliseconds before a komp query backing the outline, folding ranges, hover or inlay hints is killed. Hover and inlay hints check the whole crate, so they need more than the parse-only queries."
+          "markdownDescription": "Path to the `komp` binary, which starts the language server with `komp lsp`. Resolved on `PATH` when left as a bare name."
         },
         "kflat.warnOnStaleBinary": {
           "type": "boolean",
           "default": true,
           "markdownDescription": "Warn when `kflat.kompPath` points inside a komp checkout and was built before that checkout's newest change to `compiler/`. Has no effect on a komp installed from elsewhere, which has no tree to be behind."
+        },
+        "kflat.trace.server": {
+          "type": "string",
+          "enum": [
+            "off",
+            "messages",
+            "verbose"
+          ],
+          "default": "off",
+          "description": "Log the messages between VS Code and the language server to the KFlat output."
         }
       }
     },
@@ -174,13 +176,44 @@
           }
         ]
       }
-    }
+    },
+    "menus": {
+      "commandPalette": [
+        {
+          "command": "kflat.run",
+          "when": "false"
+        },
+        {
+          "command": "kflat.test",
+          "when": "false"
+        }
+      ]
+    },
+    "taskDefinitions": [
+      {
+        "type": "kflat",
+        "required": [
+          "command"
+        ],
+        "properties": {
+          "command": {
+            "type": "string",
+            "description": "The komp command the task runs."
+          }
+        }
+      }
+    ]
   },
   "scripts": {
     "generate-grammar": "node scripts/generate-grammar.js",
-    "test": "node scripts/generate-grammar.js --check && node scripts/test-grammar.js && node scripts/test-toml-grammar.js && node scripts/test-staleness.js"
+    "test": "node scripts/generate-grammar.js --check && node scripts/test-grammar.js && node scripts/test-toml-grammar.js && node scripts/test-staleness.js && node scripts/test-projects.js",
+    "test-editor": "node scripts/test-editor.js"
+  },
+  "dependencies": {
+    "vscode-languageclient": "^10.1.2"
   },
   "devDependencies": {
+    "@vscode/test-electron": "^3.1.0",
     "vscode-oniguruma": "^2.0.1",
     "vscode-textmate": "^9.0.0"
   },

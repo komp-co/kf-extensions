@@ -1,10 +1,11 @@
 # vscode-kflat
 
-KFlat language support for VS Code: highlighting for `.kf`, diagnostics from
-`komp check`, and an outline, folding ranges, hover, inlay hints,
-expand-selection, signature help, completion, rename, go-to-definition,
-find-references and semantic highlighting from `komp query`. No runtime
-dependencies.
+KFlat language support for VS Code: highlighting for `.kf`, file icons, and
+every editor feature from the KFlat language server, `komp lsp`:
+diagnostics as you type, quick fixes, the outline, folding, expand-selection,
+hover, inlay hints, signature help, completion, go-to-definition,
+find-references, rename, semantic highlighting, formatting, Run and Test
+lenses, and the same for `kf.toml` and `lint.toml`.
 
 ## File icons
 
@@ -26,138 +27,70 @@ names only.
 
 ## Install
 
-The extension is a plain folder, so linking it into the extensions directory
-is enough — no packaging, no network:
+The extension starts the language server through komp, so install that once:
 
 ```sh
-ln -s "$PWD/vscode" ~/.vscode/extensions/vscode-kflat   # from a kf-extensions checkout
+komp tool install komp_lsp
 ```
 
-Restart VS Code. Changes to `extension.js` need another restart; changes to
-the grammar take effect on reload.
-
-To build an installable file instead:
+Then build an installable file:
 
 ```sh
 cd vscode
+npm install
 npx @vscode/vsce package
-code --install-extension vscode-kflat-0.1.0.vsix
+code --install-extension vscode-kflat-0.2.0.vsix
 ```
 
-To hack on it, open this directory in VS Code and press F5 for an Extension
-Development Host.
+Or link the folder into the extensions directory, after `npm install
+--omit=dev` has fetched the language client it runs on:
 
-If `komp` is not on `PATH`, set `kflat.kompPath` to your binary. Prefer one
-inside a komp checkout (`.build/komp`, which `scripts/refresh-komp.sh` writes;
-`bin/komp` is a symlink to it) — the stdlib sysroot resolves through
-`<binary>/../libs`, so a compiler built elsewhere only finds the libraries
-when the working directory happens to be the repository root.
+```sh
+cd vscode && npm install --omit=dev
+ln -s "$PWD" ~/.vscode/extensions/vscode-kflat
+```
+
+Restart VS Code. To hack on it, open this directory in VS Code and press F5
+for an Extension Development Host.
+
+If `komp` is not on `PATH`, set `kflat.kompPath` to your binary. When the
+server does not start, the extension says so and offers to run `komp tool
+install komp_lsp`; what the server printed is in the KFlat output.
 
 ## Settings
 
 | Setting | Default | |
 |---|---|---|
-| `kflat.kompPath` | `komp` | path to the compiler |
-| `kflat.checkOnSave` | `true` | check the crate on save |
-| `kflat.checkOnOpen` | `true` | check the crate on open |
-| `kflat.checkTimeoutMs` | `60000` | kill a check that runs longer |
-| `kflat.queryTimeoutMs` | `30000` | kill a query that runs longer |
+| `kflat.kompPath` | `komp` | the komp that starts the server |
 | `kflat.warnOnStaleBinary` | `true` | warn when the binary predates its own checkout |
+| `kflat.trace.server` | `off` | log the server's messages to the KFlat output |
+
+**KFlat: Restart the language server** stops every server and starts them
+again; changing `kflat.kompPath` does the same.
 
 ## How it works
 
-**Diagnostics.** On open and save, `komp check --format=json` runs
-on the file's crate — the nearest ancestor holding a `kf.toml` — and its
-newline-delimited JSON is republished as VS Code diagnostics. The extension
-never parses `.kf`; the compiler decides what is an error. One check runs per
-crate at a time, and a save during a running check queues exactly one re-run.
+**One server per project.** Opening a `.kf`, `kf.toml` or `lint.toml` file
+starts `komp lsp` in its project: the outermost directory above it holding a
+`kf.toml`, without leaving the workspace folder. A workspace's member crates
+therefore share their workspace's server, which checks a crate together with
+the crates that depend on it. komp runs the server version the project pins
+in `[tools]`, else the installed one. The extension never parses KFlat; every
+answer is the server's, and the server's are the compiler's, about the text on
+screen rather than the file as last saved.
 
-komp reports byte offsets and VS Code counts UTF-16 code units, so the two
-only agree on an all-ASCII line; the extension converts.
+**Run and Test lenses.** The extension tells the server it runs
+`kflat.run` and `kflat.test`, so a Run lens sits above `fun main` and a Test
+lens above each `@test` function. Each runs `komp run` or `komp test --case`
+as a task.
 
-**A stale compiler.** Every feature here is the configured binary's opinion.
-An old one answers with an old compiler's semantics, and a wrong answer looks
-exactly like a right one — so the extension says once per build when the
-binary predates the checkout it came from.
-
-`scripts/refresh-komp.sh` now writes `.build/komp` and points `bin/komp` at
-it, so the documented paths are one file and cannot drift apart. They did:
-`bin/komp` went unwritten for weeks while `.build/komp` moved, and the
-symptom was the editor reporting a name the compiler had recently gained as
-missing — which dates the binary rather than describing the code.
-
-It is deliberately not an mtime comparison. `git checkout` rewrites the mtime
-of every file it touches, so comparing against source mtimes calls a current
-binary stale after every branch switch, and a warning that cries wolf is one
-nobody reads. The signal is the last *commit* to touch `compiler/`, which a
-checkout does not move, topped up with the mtimes of whatever `git status`
-reports as modified. Outside git it falls back to mtimes, having nothing
-better. A komp installed from somewhere else has no checkout to be behind and
-is never reported.
-
-**Outline and folding.** The breadcrumb bar, the outline view, "go to symbol
-in file" and the fold gutter all come from `komp query symbols` and `komp
-query folding` over the one file being edited. Those queries only parse, so
-they keep answering while the file does not type-check — which is most of the
-time while typing.
-
-A declaration's outline entry covers the whole declaration, because komp does
-not yet record where a name token sits inside it; clicking an entry therefore
-selects the declaration rather than just its name.
-
-**Hover and inlay hints.** Both report a type, so both run `komp query` over
-the file's crate rather than the file alone — a type is what the checker
-says it is, and the checker needs the imports. That makes them cost about
-what a `komp check` costs.
-
-**Every answer is about the buffer.** An unsaved buffer is written to a
-temporary file and handed to komp as `--overlay`, while `--file` stays the
-document's own path. komp then finds the file in its crate as usual and
-parses the staged text in its place, so a position means what it means on
-screen. Typed answers used to describe the last saved state, which put
-completion — asked, by definition, while the buffer is dirty — at an offset
-into text the author was no longer looking at.
-
-Hover answers about the innermost expression covering the cursor. Inlay
-hints appear after every `val` and `var` written without a type.
-
-**Signature help.** Typing `(` or `,` inside a call shows the callee's
-parameters with the one being typed highlighted. The parameter names come
-from the declaration, so they are the names its author chose.
-
-**Completion.** Typing `.` after a receiver offers its fields and instance
-methods, with each one's type or signature. The members come from the
-crate's declarations, so a dependency's type completes as readily as one of
-your own. `static fun`s are left out — they take no receiver.
-
-**Rename.** F2 on a declaration or any use of it rewrites all of them, sibling
-files included. It refuses — with the reason — when the new name is already
-taken in the crate, is not an identifier, or when the declaration lives in a
-dependency, where renaming it from here would edit somebody else's source.
-
-**Quick fixes.** A diagnostic that carries a repair offers it as a code
-action. `no method \`sunm\` on \`Point\`` suggests `sum` and replaces exactly
-those four characters; `cannot find function \`println\`` offers to add
-`import core.*` at the top of the file. The compiler says which bytes, so
-the editor does not have to guess — and the action is offered where the
-problem is, even when the edit lands elsewhere.
-
-**Semantic highlighting.** The TextMate grammar paints instantly and
-offline but only matches spellings — every `UpperCamelCase` word reads as a
-type, and a variable is not told apart from a function. `komp query tokens`
-corrects it once the crate has been checked, colouring each name by what it
-actually is.
-
-**Go to definition and find references.** F12 and Shift+F12 read one
-answer: the declaration the cursor names, and every use of it in the crate,
-sibling files included. Top-level declarations only — a parameter or a
-local answers with nothing, because the resolver stamps only top-level
-names.
-
-**Expand selection.** Shift+Alt+Right grows through the chain of spans
-around the cursor: the expression, whatever encloses it, then the whole
-declaration. That one parses rather than checks, so it stays instant and
-works on an unsaved buffer.
+**A stale compiler.** Every answer is the configured binary's opinion. An
+old one answers with an old compiler's semantics, and a wrong answer looks
+exactly like a right one, so the extension says once per build when the
+binary predates the checkout it came from. The signal is the last *commit*
+to touch `compiler/`, topped up with the mtimes of what `git status` reports
+as modified, since `git checkout` rewrites the mtime of every file it
+touches. A komp installed from somewhere else is never reported.
 
 **Highlighting.** `syntaxes/kflat.tmLanguage.json` is generated from the
 compiler's own tables, not written by hand:
@@ -185,22 +118,28 @@ are shapes rather than spellings.
 npm install && npm test
 ```
 
-Checks the grammar is current, then tokenizes with `vscode-textmate` — the
+Checks the grammar is current, then tokenizes with `vscode-textmate`, the
 engine VS Code itself uses, so what the tests assert is what an editor paints.
 The cases pin the places a regex grammar goes wrong: an operator that is a
 prefix of a longer one, a run of quotes, an interpolation slot. Then every
 `.kf` in the repository goes through the grammar; that source compiles, so
-anything landing in an `invalid.` scope is a false positive.
+anything landing in an `invalid.` scope is a false positive. The staleness
+rule and the choice of a file's project run outside an editor.
 
-The tokenizer is a dev dependency. The extension itself needs nothing.
+```sh
+npm run test-editor
+```
+
+Starts an editor with the extension loaded and `test/fixture` open, and asks
+it what a user would see: hover, definition, references, the outline,
+completion, inlay hints, the Run lens and the task it runs, and a diagnostic
+for an unsaved edit. It needs komp with the language server installed
+(`KOMP_BIN` names a komp off `PATH`); `CODE_BIN` names the editor, else a VS
+Code is downloaded. Without a display, run it under `xvfb-run -a`.
 
 ## Limits
 
-Highlighting is lexical. Every `UpperCamelCase` word reads as a type, and a
-variable is not told apart from a function, because a regex grammar cannot
-know what a name means. Diagnostics arrive on save, for a whole crate at a
-time, at the cost of a process launch.
-
-Both limits have the same fix: a KFlat-native language server that imports
-`kf_parse` and `kf_typecheck` in-process rather than shelling out, the way
-rust-analyzer links `rustc_lexer` instead of running `rustc` (#83).
+The grammar's colouring is lexical: every `UpperCamelCase` word reads as a
+type until the server's semantic tokens arrive. Everything else is as good as
+the server's answers; the KFlat book's editor chapter lists what they do not
+reach yet.
