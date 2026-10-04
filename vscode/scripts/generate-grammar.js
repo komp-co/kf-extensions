@@ -121,7 +121,7 @@ const KEYWORD_SCOPES = {
   // `dyn` sits here rather than with the type-introducers: it only ever
   // qualifies a borrow in type position (`&dyn Trait`), and the parser
   // poisons it anywhere else.
-  'storage.modifier.kflat': ['pub', 'extern', 'static', 'mutating', 'unsafe', 'dyn'],
+  'storage.modifier.kflat': ['pub', 'internal', 'extern', 'static', 'mutating', 'unsafe', 'dyn'],
 };
 
 // Same contract for operators. Punctuation that carries no meaning of its

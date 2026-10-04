@@ -197,7 +197,7 @@
         },
         {
           "name": "storage.modifier.kflat",
-          "match": "\\b(?:pub|extern|mutating|static|unsafe|dyn)\\b"
+          "match": "\\b(?:pub|extern|mutating|static|unsafe|dyn|internal)\\b"
         },
         {
           "name": "keyword.operator.cast.kflat",
