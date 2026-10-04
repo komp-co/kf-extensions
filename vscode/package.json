@@ -175,6 +175,9 @@
             }
           }
         ]
+      },
+      "[kflat]": {
+        "editor.autoIndentOnPaste": true
       }
     },
     "menus": {
