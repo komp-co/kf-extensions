@@ -44,6 +44,29 @@ const hoverText = (hovers) =>
   (hovers || []).flatMap((h) => h.contents.map((c) => (typeof c === 'string' ? c : c.value))).join('\n');
 
 async function run() {
+  // A block pasted into a body keeps its shape at the body's depth. First:
+  // after the Run lens's task has run, a scripted paste is not reindented.
+  const scratch = await vscode.workspace.openTextDocument({
+    language: 'kflat',
+    content: 'fun f(): int32 {\n    val a = 1\n    \n    return a\n}\n',
+  });
+  const pasting = await vscode.window.showTextDocument(scratch);
+  await vscode.env.clipboard.writeText('if a > 0 {\n    println(a)\n}');
+  // A window's first paste is never reindented, whatever the language: this
+  // one only warms the editor up, and is undone.
+  pasting.selection = new vscode.Selection(2, 4, 2, 4);
+  await vscode.commands.executeCommand('editor.action.clipboardPasteAction');
+  await sleep(500);
+  await vscode.commands.executeCommand('undo');
+  pasting.selection = new vscode.Selection(2, 4, 2, 4);
+  await vscode.commands.executeCommand('editor.action.clipboardPasteAction');
+  const pasted = await until(async () => scratch.getText(), (text) => text.includes('println'), 5000);
+  check(
+    'a pasted block is indented to where it lands',
+    pasted.includes('    if a > 0 {\n        println(a)\n    }\n'),
+    JSON.stringify(pasted)
+  );
+
   const root = vscode.workspace.workspaceFolders[0].uri;
   const doc = await vscode.workspace.openTextDocument(vscode.Uri.joinPath(root, 'src', 'main.kf'));
   await vscode.window.showTextDocument(doc);
