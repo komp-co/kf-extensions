@@ -40,7 +40,7 @@ Then build an installable file:
 cd vscode
 npm install
 npx @vscode/vsce package
-code --install-extension vscode-kflat-0.3.0.vsix
+code --install-extension vscode-kflat-0.3.1.vsix
 ```
 
 Or link the folder into the extensions directory, after `npm install

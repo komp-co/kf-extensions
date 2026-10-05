@@ -2,7 +2,7 @@
   "name": "vscode-kflat",
   "displayName": "KFlat",
   "description": "KFlat language support: highlighting generated from komp's lexer tables, and diagnostics, hover, completion, navigation, rename and the rest from the language server, komp lsp.",
-  "version": "0.3.0",
+  "version": "0.3.1",
   "publisher": "kflat",
   "license": "MIT",
   "repository": {
