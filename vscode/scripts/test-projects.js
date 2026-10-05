@@ -56,6 +56,16 @@ check(
 );
 check('another command is not a lens', projects.lensArguments('komp.fetch', ['/w/app']), null);
 
+check('a command for a crate goes to its project', projects.servingRoot('/w/app', ['/w/app', '/w/lib']), '/w/app');
+check(
+  "a member crate's command goes to its workspace",
+  projects.servingRoot('/w/compiler/kf-core', ['/w/compiler', '/w/app']),
+  '/w/compiler'
+);
+check('the innermost serving project wins', projects.servingRoot('/w/a/b', ['/w', '/w/a']), '/w/a');
+check('a sibling with a common prefix does not serve', projects.servingRoot('/w/app2', ['/w/app']), null);
+check('a command without a directory goes nowhere', projects.servingRoot(undefined, ['/w/app']), null);
+
 if (failures > 0) {
   process.stderr.write(`${failures} failed\n`);
   process.exit(1);
