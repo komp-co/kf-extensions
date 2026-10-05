@@ -90,6 +90,11 @@ in the server, which says when they finish. Their commands are registered
 once for every server, since VS Code refuses a command name twice, and each
 click goes to the server of the project holding the crate.
 
+**Semantic highlighting.** The server's tokens tell a type from an enum
+variant, a field and a method, which the grammar cannot. KFlat files turn
+`editor.semanticHighlighting.enabled` on, so they show under a theme that
+leaves it off; set it back per language to prefer the theme's choice.
+
 **A stale compiler.** Every answer is the configured binary's opinion. An
 old one answers with an old compiler's semantics, and a wrong answer looks
 exactly like a right one, so the extension says once per build when the

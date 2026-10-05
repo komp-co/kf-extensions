@@ -177,7 +177,11 @@
         ]
       },
       "[kflat]": {
-        "editor.autoIndentOnPaste": true
+        "editor.autoIndentOnPaste": true,
+        "editor.semanticHighlighting.enabled": true
+      },
+      "[kflat-test]": {
+        "editor.semanticHighlighting.enabled": true
       }
     },
     "menus": {
