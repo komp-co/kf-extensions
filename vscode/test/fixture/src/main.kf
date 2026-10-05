@@ -9,6 +9,16 @@ impl Point {
     }
 }
 
+trait Measured {
+    fun size(): int32
+}
+
+impl Measured for Point {
+    fun size(): int32 {
+        return self.x
+    }
+}
+
 fun twice(n: int32): int32 {
     return n * 2
 }

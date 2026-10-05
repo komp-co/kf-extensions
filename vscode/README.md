@@ -142,9 +142,10 @@ npm run test-editor
 ```
 
 Starts an editor with the extension loaded and `test/fixture` open, and asks
-it what a user would see: hover, definition, references, the outline,
-completion, inlay hints, the Run lens and the task it runs, and a diagnostic
-for an unsaved edit. It needs komp with the language server installed
+it what a user would see: hover, definition, implementation, references, the
+outline, completion, inlay hints, formatting, the Run lens and the task it
+runs, kf.toml's lenses in two projects at once, and a diagnostic for an
+unsaved edit. It needs komp with the language server installed
 (`KOMP_BIN` names a komp off `PATH`); `CODE_BIN` names the editor, else a VS
 Code is downloaded. Without a display, run it under `xvfb-run -a`.
 
