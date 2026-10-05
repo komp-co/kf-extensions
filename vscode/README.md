@@ -4,8 +4,9 @@ KFlat language support for VS Code: highlighting for `.kf`, file icons, and
 every editor feature from the KFlat language server, `komp lsp`:
 diagnostics as you type, quick fixes, the outline, folding, expand-selection,
 hover, inlay hints, signature help, completion, go-to-definition,
-find-references, rename, semantic highlighting, formatting, Run and Test
-lenses, and the same for `kf.toml` and `lint.toml`.
+go-to-implementation, find-references, rename, semantic highlighting,
+formatting, Run and Test lenses, and the same for `kf.toml` and `lint.toml`,
+where Fetch and Update lenses sit above `[dependencies]`.
 
 ## File icons
 
@@ -39,7 +40,7 @@ Then build an installable file:
 cd vscode
 npm install
 npx @vscode/vsce package
-code --install-extension vscode-kflat-0.2.0.vsix
+code --install-extension vscode-kflat-0.3.0.vsix
 ```
 
 Or link the folder into the extensions directory, after `npm install
@@ -83,6 +84,16 @@ screen rather than the file as last saved.
 `kflat.run` and `kflat.test`, so a Run lens sits above `fun main` and a Test
 lens above each `@test` function. Each runs `komp run` or `komp test --case`
 as a task.
+
+**kf.toml's lenses.** Fetch and Update run `komp metadata` and `komp update`
+in the server, which says when they finish. Their commands are registered
+once for every server, since VS Code refuses a command name twice, and each
+click goes to the server of the project holding the crate.
+
+**Semantic highlighting.** The server's tokens tell a type from an enum
+variant, a field and a method, which the grammar cannot. KFlat files turn
+`editor.semanticHighlighting.enabled` on, so they show under a theme that
+leaves it off; set it back per language to prefer the theme's choice.
 
 **A stale compiler.** Every answer is the configured binary's opinion. An
 old one answers with an old compiler's semantics, and a wrong answer looks
@@ -131,9 +142,10 @@ npm run test-editor
 ```
 
 Starts an editor with the extension loaded and `test/fixture` open, and asks
-it what a user would see: hover, definition, references, the outline,
-completion, inlay hints, the Run lens and the task it runs, and a diagnostic
-for an unsaved edit. It needs komp with the language server installed
+it what a user would see: hover, definition, implementation, references, the
+outline, completion, inlay hints, formatting, the Run lens and the task it
+runs, kf.toml's lenses in two projects at once, and a diagnostic for an
+unsaved edit. It needs komp with the language server installed
 (`KOMP_BIN` names a komp off `PATH`); `CODE_BIN` names the editor, else a VS
 Code is downloaded. Without a display, run it under `xvfb-run -a`.
 

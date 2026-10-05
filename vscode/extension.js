@@ -17,6 +17,8 @@ const SERVED_LANGUAGES = ['kflat', 'kflat-test', 'kflat-manifest', 'kflat-lints'
 const clients = new Map();
 /** Project roots whose server failed to start; retried on restart. */
 const failed = new Set();
+/** A server's `workspace/executeCommand` name -> its one registration. */
+const serverCommands = new Map();
 
 let output;
 
@@ -30,7 +32,8 @@ function activate(context) {
     vscode.commands.registerCommand('kflat.test', (dir, name) => runLens('kflat.test', [dir, name])),
     vscode.workspace.onDidChangeConfiguration((event) => {
       if (event.affectsConfiguration('kflat.kompPath')) restartAll();
-    })
+    }),
+    { dispose: () => serverCommands.forEach((registration) => registration.dispose()) }
   );
   for (const doc of vscode.workspace.textDocuments) serve(doc);
 }
@@ -66,6 +69,7 @@ function serve(doc) {
     }
   );
   client.registerFeature(RUN_COMMANDS);
+  shareServerCommands(client);
   clients.set(root, client);
   client.start().catch((error) => {
     clients.delete(root);
@@ -87,6 +91,35 @@ const RUN_COMMANDS = {
   },
   clear() {},
 };
+
+/// The server's commands, such as kf.toml's Fetch and Update lenses, are
+/// registered once for every server rather than by each client: VS Code
+/// refuses a second registration of a name, which would stop a second
+/// project's server from starting. A call goes to the server of the project
+/// holding its first argument, a directory.
+function shareServerCommands(client) {
+  const feature = client.getFeature('workspace/executeCommand');
+  const share = (options) => {
+    for (const command of (options && options.commands) || []) {
+      if (serverCommands.has(command)) continue;
+      serverCommands.set(
+        command,
+        vscode.commands.registerCommand(command, (...args) => runServerCommand(command, args))
+      );
+    }
+  };
+  feature.initialize = (capabilities) => share(capabilities.executeCommandProvider);
+  feature.register = (data) => share(data.registerOptions);
+}
+
+function runServerCommand(command, args) {
+  const root = projects.servingRoot(args[0], clients.keys());
+  if (!root) {
+    output.info(`no running server serves ${args[0]}, so \`${command}\` was not sent`);
+    return undefined;
+  }
+  return clients.get(root).sendRequest('workspace/executeCommand', { command, arguments: args });
+}
 
 function reportStartFailure(komp, root, error) {
   output.info(`could not start \`${komp} lsp\` in ${root}: ${error && error.message}`);

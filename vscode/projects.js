@@ -1,7 +1,7 @@
 'use strict';
-// Which project a file belongs to, and the komp command lines the server's
-// lenses name. Nothing here needs `vscode`, so scripts/test-projects.js runs
-// it outside an editor.
+// Which project a file belongs to, which server a command goes to, and the
+// komp command lines the server's lenses name. Nothing here needs `vscode`,
+// so scripts/test-projects.js runs it outside an editor.
 
 const fs = require('node:fs');
 const path = require('node:path');
@@ -36,4 +36,17 @@ function lensArguments(command, args) {
   return null;
 }
 
-module.exports = { projectRootFor, globEscape, lensArguments };
+/// Of the project roots `roots`, the one serving `dir`: the innermost that
+/// is `dir` or holds it. null when none does.
+function servingRoot(dir, roots) {
+  if (typeof dir !== 'string') return null;
+  const target = path.resolve(dir);
+  let best = null;
+  for (const root of roots) {
+    const inside = target === root || target.startsWith(root.endsWith(path.sep) ? root : root + path.sep);
+    if (inside && (best === null || root.length > best.length)) best = root;
+  }
+  return best;
+}
+
+module.exports = { projectRootFor, globEscape, lensArguments, servingRoot };

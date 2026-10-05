@@ -124,6 +124,73 @@ async function run() {
     check('the Run lens runs the crate', code === 0, `komp run ended with ${code}`);
   }
 
+  const implemented = await vscode.commands.executeCommand(
+    'vscode.executeImplementationProvider',
+    uri,
+    at(doc, 'trait Measured', 'Measured')
+  );
+  const impl = at(doc, 'impl Measured', 'Measured').line;
+  check(
+    'go to implementation finds the impl',
+    (implemented || []).some((l) => {
+      const line = (l.range || l.targetRange).start.line;
+      return line >= impl && line <= impl + 3;
+    }),
+    JSON.stringify(implemented)
+  );
+
+  // Formatting runs the project's `komp fmt` over the unsaved text.
+  const testUri = vscode.Uri.joinPath(root, 'src', 'main_test.kf');
+  const testDoc = await vscode.workspace.openTextDocument(testUri);
+  const testEditor = await vscode.window.showTextDocument(testDoc);
+  const spaced = at(testDoc, 'twice(3), 6', ',');
+  await testEditor.edit((edit) => edit.insert(spaced, '    '));
+  const formatting = await vscode.commands.executeCommand('vscode.executeFormatDocumentProvider', testUri, {
+    tabSize: 4,
+    insertSpaces: true,
+  });
+  const formatted = new vscode.WorkspaceEdit();
+  formatted.set(testUri, formatting || []);
+  await vscode.workspace.applyEdit(formatted);
+  check('formatting undoes the extra spaces', testDoc.getText().includes('twice(3), 6'), testDoc.getText());
+
+  // kf.toml's lenses run komp in the server; each project's goes to its own.
+  const manifestLenses = async (folder) => {
+    const manifest = vscode.Uri.joinPath(folder, 'kf.toml');
+    await vscode.workspace.openTextDocument(manifest);
+    return until(
+      () => vscode.commands.executeCommand('vscode.executeCodeLensProvider', manifest),
+      (l) => (l || []).length > 0
+    );
+  };
+  const named = (lenses, command) => (lenses || []).find((l) => l.command && l.command.command === command);
+  const fetch = named(await manifestLenses(root), 'komp.fetch');
+  check('kf.toml carries Fetch and Update lenses', fetch !== undefined, 'no komp.fetch lens');
+  const accepted = async (lens) => {
+    try {
+      await vscode.commands.executeCommand(lens.command.command, ...lens.command.arguments);
+      return 'accepted';
+    } catch (error) {
+      return `${error.message || error}`;
+    }
+  };
+  if (fetch) check('the Fetch lens reaches the server', (await accepted(fetch)) === 'accepted', await accepted(fetch));
+
+  const secondRoot = vscode.workspace.workspaceFolders[1].uri;
+  const secondDoc = await vscode.workspace.openTextDocument(vscode.Uri.joinPath(secondRoot, 'src', 'main.kf'));
+  await vscode.window.showTextDocument(secondDoc);
+  const secondHover = await until(
+    () => vscode.commands.executeCommand('vscode.executeHoverProvider', secondDoc.uri, at(secondDoc, 'twice(total)', 'twice')),
+    (h) => hoverText(h).includes('twice(')
+  );
+  check('a second project starts a server of its own', hoverText(secondHover).includes('twice('), hoverText(secondHover));
+  const secondFetch = named(await manifestLenses(secondRoot), 'komp.fetch');
+  check(
+    "the second project's Fetch lens reaches its server",
+    secondFetch !== undefined && (await accepted(secondFetch)) === 'accepted',
+    JSON.stringify(secondFetch)
+  );
+
   const editor = await vscode.window.showTextDocument(doc);
   const field = at(doc, 'doubled - p.x', 'x');
   await editor.edit((edit) => edit.replace(new vscode.Range(field.translate(0, -1), field), 'z'));

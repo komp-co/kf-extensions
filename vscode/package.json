@@ -2,7 +2,7 @@
   "name": "vscode-kflat",
   "displayName": "KFlat",
   "description": "KFlat language support: highlighting generated from komp's lexer tables, and diagnostics, hover, completion, navigation, rename and the rest from the language server, komp lsp.",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "publisher": "kflat",
   "license": "MIT",
   "repository": {
@@ -177,7 +177,11 @@
         ]
       },
       "[kflat]": {
-        "editor.autoIndentOnPaste": true
+        "editor.autoIndentOnPaste": true,
+        "editor.semanticHighlighting.enabled": true
+      },
+      "[kflat-test]": {
+        "editor.semanticHighlighting.enabled": true
       }
     },
     "menus": {
