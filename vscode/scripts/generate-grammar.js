@@ -434,6 +434,18 @@ function build() {
             name: 'variable.language.self.kflat',
             match: '\\bself\\b',
           },
+          // Not a keyword either: `null` is a name the checker reads as the
+          // empty optional, so it is a constant like `true`.
+          {
+            name: 'constant.language.null.kflat',
+            match: '\\bnull\\b',
+          },
+          // `x is Variant` tests a variant; `is` is a name everywhere else,
+          // so it is the operator only between an operand and a pattern.
+          {
+            name: 'keyword.operator.expression.is.kflat',
+            match: '(?<=[\\w)\\]])\\s+\\K\\bis\\b(?=\\s+[A-Za-z_])',
+          },
           {
             name: 'support.type.builtin.kflat',
             match: `\\b(?:${builtinTypes.map(esc).join('|')})\\b`,
