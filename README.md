@@ -2,7 +2,7 @@
 
 # kf-extensions
 
-Editor extensions for [KFlat](https://github.com/komp-co/komp).
+Editor extensions for [KFlat](https://github.com/komp-co/kf-lang).
 
 | Directory | Editor |
 |---|---|
