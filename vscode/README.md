@@ -104,13 +104,14 @@ as modified, since `git checkout` rewrites the mtime of every file it
 touches. A komp installed from somewhere else is never reported.
 
 **Highlighting.** `syntaxes/kflat.tmLanguage.json` is generated from the
-compiler's own tables, not written by hand:
+compiler's own tables in a komp-co/kf-lang checkout (`KFLAT_REPO`, else
+`kf-lang` beside this repository), not written by hand:
 
 | Read from | Gives |
 |---|---|
 | `kw_str` in `compiler/kf-parse/src/lexer/keyword.kf` | keyword spellings |
 | `op_str` in `compiler/kf-parse/src/lexer/operator.kf` | operator spellings |
-| `is_runtime_type_name` in `compiler/kf-core/src/ast/linkage.kf` | builtin type names |
+| `RUNTIME_TYPE_NAMES` in `compiler/kf-core/src/names/c_names.kf` | builtin type names |
 
 ```sh
 node scripts/generate-grammar.js            # rewrite the grammar

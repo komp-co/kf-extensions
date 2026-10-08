@@ -17,8 +17,8 @@ const path = require('node:path');
 const oniguruma = require('vscode-oniguruma');
 const textmate = require('vscode-textmate');
 
-// A komp checkout: `KOMP_REPO`, or `komp` beside this kf-extensions checkout.
-const REPO = process.env.KOMP_REPO || path.resolve(__dirname, '..', '..', '..', 'komp');
+// A kf-lang checkout: `KFLAT_REPO`, or `kf-lang` beside this kf-extensions checkout.
+const REPO = process.env.KFLAT_REPO || path.resolve(__dirname, '..', '..', '..', 'kf-lang');
 const GRAMMAR = path.resolve(__dirname, '..', 'syntaxes', 'kflat.tmLanguage.json');
 
 // Each case: source line, then [text, innermost scope] for tokens to pin.
