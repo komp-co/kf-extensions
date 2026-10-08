@@ -2,7 +2,7 @@
 'use strict';
 // The grammar for kf.toml, kf.lock and lint.toml, tokenized with the engine
 // VS Code uses. The cases pin the scopes a theme paints; the sweep runs every
-// such file in a komp checkout and fails on any text left unscoped or a
+// such file in a kf-lang checkout and fails on any text left unscoped or a
 // string still open at end of file.
 
 const fs = require('node:fs');
@@ -10,7 +10,8 @@ const path = require('node:path');
 const oniguruma = require('vscode-oniguruma');
 const textmate = require('vscode-textmate');
 
-const REPO = process.env.KOMP_REPO || path.resolve(__dirname, '..', '..', '..', 'komp');
+// A kf-lang checkout: `KFLAT_REPO`, or `kf-lang` beside this kf-extensions checkout.
+const REPO = process.env.KFLAT_REPO || path.resolve(__dirname, '..', '..', '..', 'kf-lang');
 const GRAMMAR = path.resolve(__dirname, '..', 'syntaxes', 'kflat-toml.tmLanguage.json');
 const SCOPE = 'source.toml.kflat';
 const NAMES = new Set(['kf.toml', 'kf.lock', 'lint.toml']);

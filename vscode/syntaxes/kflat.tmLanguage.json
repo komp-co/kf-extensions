@@ -259,6 +259,14 @@
           "match": "\\bself\\b"
         },
         {
+          "name": "constant.language.null.kflat",
+          "match": "\\bnull\\b"
+        },
+        {
+          "name": "keyword.operator.expression.is.kflat",
+          "match": "(?<=[\\w)\\]])\\s+\\K\\bis\\b(?=\\s+[A-Za-z_])"
+        },
+        {
           "name": "support.type.builtin.kflat",
           "match": "\\b(?:Array|List|Option|String|str|Box|Ptr|bool|char|void|int8|int16|int32|int64|uint8|uint16|uint32|uint64|float32|float64)\\b"
         },

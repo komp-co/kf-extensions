@@ -1,9 +1,9 @@
 #!/usr/bin/env node
 'use strict';
-// Generates syntaxes/kflat.tmLanguage.json from komp's own lexer tables.
+// Generates syntaxes/kflat.tmLanguage.json from the compiler's own lexer tables.
 //
 // Keyword spellings come from `kw_str`, operator spellings from `op_str`,
-// builtin type names from `is_runtime_type_name` and the library types
+// builtin type names from `RUNTIME_TYPE_NAMES` and the library types
 // marked `@lang` — the same tables the
 // compiler lexes and diagnoses with. Nothing here restates a spelling, so
 // the grammar cannot drift from the language the way a hand-written one
@@ -21,17 +21,17 @@
 const fs = require('node:fs');
 const path = require('node:path');
 
-// A komp checkout: `KOMP_REPO`, or `komp` beside this kf-extensions checkout.
-const REPO = process.env.KOMP_REPO || path.resolve(__dirname, '..', '..', '..', 'komp');
+// A kf-lang checkout: `KFLAT_REPO`, or `kf-lang` beside this kf-extensions checkout.
+const REPO = process.env.KFLAT_REPO || path.resolve(__dirname, '..', '..', '..', 'kf-lang');
 const OUT = path.resolve(__dirname, '..', 'syntaxes', 'kflat.tmLanguage.json');
 
 const LEXER = path.join(REPO, 'compiler', 'kf-parse', 'src', 'lexer');
 const KEYWORD_KF = path.join(LEXER, 'keyword.kf');
 const OPERATOR_KF = path.join(LEXER, 'operator.kf');
-const LINKAGE_KF = path.join(REPO, 'compiler', 'kf-core', 'src', 'ast', 'linkage.kf');
+const C_NAMES_KF = path.join(REPO, 'compiler', 'kf-core', 'src', 'names', 'c_names.kf');
 const LIBS = path.join(REPO, 'libs');
 
-// ------------------------------------------------------------ reading komp
+// ------------------------------------------------------------ reading the compiler
 
 function read(file) {
   try {
@@ -81,11 +81,12 @@ function enumVariants(src, name, file) {
     });
 }
 
-/// The string literals `is_runtime_type_name` maps to `true`.
+/// The names in `RUNTIME_TYPE_NAMES`.
 function runtimeTypeNames(src) {
-  const body = funBody(src, 'is_runtime_type_name', LINKAGE_KF);
-  const names = [...body.matchAll(/"(\w+)"\s*=>\s*true/g)].map((m) => m[1]);
-  if (names.length === 0) fail('is_runtime_type_name yielded no names — its shape changed');
+  const table = /val RUNTIME_TYPE_NAMES: str\[\] = \[([^\]]*)\]/.exec(src);
+  if (!table) fail(`${path.relative(REPO, C_NAMES_KF)} no longer declares RUNTIME_TYPE_NAMES`);
+  const names = [...table[1].matchAll(/"(\w+)"/g)].map((m) => m[1]);
+  if (names.length === 0) fail('RUNTIME_TYPE_NAMES yielded no names — its shape changed');
   return names;
 }
 
@@ -221,7 +222,7 @@ function build() {
   const scopedKeywords = scopeAll(keywords.map((k) => k.spelling), KEYWORD_SCOPES, 'keyword');
   const scopedOperators = scopeAll(operators.map((o) => o.spelling), OPERATOR_SCOPES, 'operator');
 
-  const builtinTypes = [...langTypeNames(), ...runtimeTypeNames(read(LINKAGE_KF))];
+  const builtinTypes = [...langTypeNames(), ...runtimeTypeNames(read(C_NAMES_KF))];
 
   // Keywords are `\b`-delimited, so one alternation per scope is enough —
   // no keyword is a prefix of another once whole words are required.
@@ -433,6 +434,18 @@ function build() {
           {
             name: 'variable.language.self.kflat',
             match: '\\bself\\b',
+          },
+          // Not a keyword either: `null` is a name the checker reads as the
+          // empty optional, so it is a constant like `true`.
+          {
+            name: 'constant.language.null.kflat',
+            match: '\\bnull\\b',
+          },
+          // `x is Variant` tests a variant; `is` is a name everywhere else,
+          // so it is the operator only between an operand and a pattern.
+          {
+            name: 'keyword.operator.expression.is.kflat',
+            match: '(?<=[\\w)\\]])\\s+\\K\\bis\\b(?=\\s+[A-Za-z_])',
           },
           {
             name: 'support.type.builtin.kflat',

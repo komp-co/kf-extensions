@@ -40,7 +40,7 @@ Then build an installable file:
 cd vscode
 npm install
 npx @vscode/vsce package
-code --install-extension vscode-kflat-0.3.0.vsix
+code --install-extension vscode-kflat-0.3.1.vsix
 ```
 
 Or link the folder into the extensions directory, after `npm install
@@ -95,22 +95,23 @@ variant, a field and a method, which the grammar cannot. KFlat files turn
 `editor.semanticHighlighting.enabled` on, so they show under a theme that
 leaves it off; set it back per language to prefer the theme's choice.
 
-**A stale compiler.** Every answer is the configured binary's opinion. An
-old one answers with an old compiler's semantics, and a wrong answer looks
-exactly like a right one, so the extension says once per build when the
-binary predates the checkout it came from. The signal is the last *commit*
-to touch `compiler/`, topped up with the mtimes of what `git status` reports
+**A stale komp.** The server, the lenses and the tasks all run through the
+configured komp, and an old one looks exactly like a current one, so the
+extension says once per build when a komp run from its own checkout predates
+it. The signal is the last *commit* to touch `src/`, `native/` or `kf.toml`,
+topped up with the mtimes of what `git status` reports
 as modified, since `git checkout` rewrites the mtime of every file it
 touches. A komp installed from somewhere else is never reported.
 
 **Highlighting.** `syntaxes/kflat.tmLanguage.json` is generated from the
-compiler's own tables, not written by hand:
+compiler's own tables in a komp-co/kf-lang checkout (`KFLAT_REPO`, else
+`kf-lang` beside this repository), not written by hand:
 
 | Read from | Gives |
 |---|---|
 | `kw_str` in `compiler/kf-parse/src/lexer/keyword.kf` | keyword spellings |
 | `op_str` in `compiler/kf-parse/src/lexer/operator.kf` | operator spellings |
-| `is_runtime_type_name` in `compiler/kf-core/src/ast/linkage.kf` | builtin type names |
+| `RUNTIME_TYPE_NAMES` in `compiler/kf-core/src/names/c_names.kf` | builtin type names |
 
 ```sh
 node scripts/generate-grammar.js            # rewrite the grammar

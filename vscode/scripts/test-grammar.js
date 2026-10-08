@@ -17,8 +17,8 @@ const path = require('node:path');
 const oniguruma = require('vscode-oniguruma');
 const textmate = require('vscode-textmate');
 
-// A komp checkout: `KOMP_REPO`, or `komp` beside this kf-extensions checkout.
-const REPO = process.env.KOMP_REPO || path.resolve(__dirname, '..', '..', '..', 'komp');
+// A kf-lang checkout: `KFLAT_REPO`, or `kf-lang` beside this kf-extensions checkout.
+const REPO = process.env.KFLAT_REPO || path.resolve(__dirname, '..', '..', '..', 'kf-lang');
 const GRAMMAR = path.resolve(__dirname, '..', 'syntaxes', 'kflat.tmLanguage.json');
 
 // Each case: source line, then [text, innermost scope] for tokens to pin.
@@ -50,6 +50,10 @@ const CASES = [
     ['Point', 'entity.name.type.kflat'],
   ]],
   ['        self.x = 1', [['self', 'variable.language.self.kflat']]],
+  ['    return x ?: null', [['null', 'constant.language.null.kflat']]],
+  ['    val n = nullable', [['nullable', null]]],
+  ['    if x is Some {', [['is', 'keyword.operator.expression.is.kflat']]],
+  ['    val is = 1', [['is', null]]],
 
   // A doc comment is scoped apart from a plain one, and the `///` rule has to
   // stay ahead of the `//` rule or the longer prefix never gets its own scope.
@@ -176,13 +180,14 @@ function runCases(grammar) {
   for (const [source, expectations] of CASES) {
     const { tokens } = tokenize(grammar, [source]);
     for (const [text, scope] of expectations) {
-      const hit = tokens.find((t) => t.text === text);
+      const hit = tokens.find((t) => t.text === text) || tokens.find((t) => t.text.trim() === text);
       if (!hit) {
         const got = tokens.filter((t) => t.text.trim()).map((t) => JSON.stringify(t.text));
         report(`${JSON.stringify(source)} -> ${JSON.stringify(text)}`, `no such token; got ${got.join(' ')}`);
         continue;
       }
-      if (!hit.scopes.includes(scope)) {
+      // A null scope: the word is left to the theme's plain text.
+      if (scope === null ? hit.scopes.length !== 1 : !hit.scopes.includes(scope)) {
         report(`${JSON.stringify(source)} -> ${JSON.stringify(text)}`, `expected ${scope}, got ${hit.scopes.join(' ')}`);
       }
     }
