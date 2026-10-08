@@ -42,8 +42,8 @@ check('two days reads in days', stale.describeAge(48 * 3600000), '2 days');
 
 check(
   'a path is taken as written',
-  stale.resolveBinary(path.join(REPO, 'bootstrap', 'build.sh')),
-  path.join(REPO, 'bootstrap', 'build.sh')
+  stale.resolveBinary(path.join(REPO, 'scripts', 'check.sh')),
+  path.join(REPO, 'scripts', 'check.sh')
 );
 check('a bare name that is on no PATH resolves to nothing',
   stale.resolveBinary('definitely-not-a-real-binary-xyzzy'), null);
@@ -51,10 +51,16 @@ check('a bare name that is on no PATH resolves to nothing',
 // -------------------------------------------------------------- kompTreeAbove
 
 check(
-  'a binary in bin/ finds the checkout above it',
-  stale.kompTreeAbove(path.join(REPO, 'bin', 'komp')),
+  'a binary in target/ finds the checkout above it',
+  stale.kompTreeAbove(path.join(REPO, 'target', 'kflat', 'komp')),
   REPO
 );
+{
+  const other = fs.mkdtempSync(path.join(os.tmpdir(), 'kflat-project-'));
+  fs.writeFileSync(path.join(other, 'kf.toml'), '[project]\nname = "kompanion"\n\n[dependencies]\nkomp = "1"\n');
+  check('another project is not a komp checkout', stale.kompTreeAbove(path.join(other, 'target', 'kflat', 'x')), null);
+  fs.rmSync(other, { recursive: true, force: true });
+}
 check('a binary outside any checkout finds none', stale.kompTreeAbove('/usr/bin/komp'), null);
 
 // --------------------------------------------------------------- newestMtimeOf
@@ -87,7 +93,7 @@ check('a binary outside any checkout finds none', stale.kompTreeAbove('/usr/bin/
 
 const probes = [];
 function probe(name, mtime) {
-  const at = path.join(REPO, 'bin', name);
+  const at = path.join(REPO, 'target', 'kflat', name);
   fs.mkdirSync(path.dirname(at), { recursive: true });
   fs.writeFileSync(at, '');
   fs.chmodSync(at, 0o755);
@@ -99,7 +105,7 @@ function probe(name, mtime) {
 // The commit timestamp this is all compared against.
 const lastCommit =
   Number(
-    execFileSync('git', ['-C', REPO, 'log', '-1', '--format=%ct', '--', 'compiler'], {
+    execFileSync('git', ['-C', REPO, 'log', '-1', '--format=%ct', '--', 'src', 'native', 'kf.toml'], {
       encoding: 'utf8',
     }).trim()
   ) * 1000;
@@ -111,11 +117,11 @@ const fresh = probe('komp_probe_fresh', new Date(Date.now() + 60000));
 // files were just written — what a checkout leaves behind. The mtimes say
 // "stale" and the rule has to say otherwise.
 const checkoutLike = fs.mkdtempSync(path.join(os.tmpdir(), 'kflat-checkout-'));
-fs.mkdirSync(path.join(checkoutLike, 'compiler', 'komp'), { recursive: true });
-fs.writeFileSync(path.join(checkoutLike, 'compiler', 'komp', 'kf.toml'), '');
-fs.writeFileSync(path.join(checkoutLike, 'compiler', 'komp', 'main.kf'), 'fun main(): int32 { return 0 }');
-fs.mkdirSync(path.join(checkoutLike, 'bin'));
-const afterCheckout = path.join(checkoutLike, 'bin', 'komp');
+fs.mkdirSync(path.join(checkoutLike, 'src'));
+fs.writeFileSync(path.join(checkoutLike, 'kf.toml'), '[project]\nname = "komp"\n');
+fs.writeFileSync(path.join(checkoutLike, 'src', 'main.kf'), 'fun main(): int32 { return 0 }');
+fs.mkdirSync(path.join(checkoutLike, 'target', 'kflat'), { recursive: true });
+const afterCheckout = path.join(checkoutLike, 'target', 'kflat', 'komp');
 fs.writeFileSync(afterCheckout, '');
 fs.chmodSync(afterCheckout, 0o755);
 
@@ -138,12 +144,12 @@ function commitCheckoutLike() {
   const built = new Date(Date.now() - 3600000);
   fs.utimesSync(afterCheckout, built, built);
   const touched = new Date();
-  fs.utimesSync(path.join(checkoutLike, 'compiler', 'komp', 'main.kf'), touched, touched);
+  fs.utimesSync(path.join(checkoutLike, 'src', 'main.kf'), touched, touched);
 }
 commitCheckoutLike();
 
 const pending = [
-  ['a binary older than the last compiler commit is stale', ancient, true],
+  ['a binary older than the last source commit is stale', ancient, true],
   ['a binary newer than every source is current', fresh, false],
   ['a binary outside a checkout is never stale', process.execPath, false],
   ['a source mtime bumped by a checkout does not make a binary stale', afterCheckout, false],

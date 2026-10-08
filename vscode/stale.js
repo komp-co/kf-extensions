@@ -1,5 +1,5 @@
 'use strict';
-// Deciding whether the configured komp predates the compiler it came from.
+// Deciding whether the configured komp predates the checkout it came from.
 //
 // Split out of extension.js because it is the one thing here that reaches a
 // conclusion of its own rather than relaying what komp said, and because
@@ -28,7 +28,7 @@ function resolveBinary(bin) {
 }
 
 /// The binary as `{ path, builtMs }`, resolved through symlinks --
-/// `~/.local/bin/komp -> <checkout>/.build/komp` is a normal way to have it on
+/// `~/.local/bin/komp -> <checkout>/target/kflat/komp` is a normal way to have it on
 /// PATH, and the checkout is what the rest of this needs to find.
 ///
 /// null when there is nothing to stat: missing entirely is a louder failure
@@ -44,21 +44,34 @@ function binaryStamp(kompPath) {
   }
 }
 
-/// The checkout a binary was built from: the nearest ancestor holding the
-/// compiler's own crate. `.build/komp` puts it one level up, but nothing here
-/// depends on that. null for a komp installed from anywhere else, which has
-/// no tree to be behind.
+/// What a komp checkout's binary is built from, relative to its root.
+const KOMP_SOURCES = ['src', 'native', 'kf.toml'];
+
+/// The checkout a binary was built from: the nearest ancestor whose `kf.toml`
+/// names the project `komp`. null for a komp installed from anywhere else,
+/// which has no tree to be behind.
 function kompTreeAbove(binaryPath) {
   let dir = path.dirname(binaryPath);
   for (;;) {
-    if (fs.existsSync(path.join(dir, 'compiler', 'komp', 'kf.toml'))) return dir;
+    if (isKompManifest(path.join(dir, 'kf.toml'))) return dir;
     const parent = path.dirname(dir);
     if (parent === dir) return null;
     dir = parent;
   }
 }
 
-/// When the compiler last changed, in epoch ms.
+function isKompManifest(file) {
+  let text;
+  try {
+    text = fs.readFileSync(file, 'utf8');
+  } catch {
+    return false;
+  }
+  const project = text.split(/^\[/m).find((table) => table.startsWith('project]'));
+  return project !== undefined && /^name\s*=\s*"komp"\s*$/m.test(project);
+}
+
+/// When komp's sources last changed, in epoch ms.
 ///
 /// mtime alone cannot answer this. `git checkout` rewrites the mtime of every
 /// file it touches, so switching branches makes a perfectly current binary
@@ -68,18 +81,17 @@ function kompTreeAbove(binaryPath) {
 /// mtimes of whatever is modified but not yet committed.
 ///
 /// Outside git there is nothing better than the mtimes, so fall back to them.
-function newestCompilerChange(tree, done) {
-  const compilerDir = path.join(tree, 'compiler');
+function newestSourceChange(tree, done) {
   execFile(
-    'git', ['-C', tree, 'log', '-1', '--format=%ct', '--', 'compiler'],
+    'git', ['-C', tree, 'log', '-1', '--format=%ct', '--', ...KOMP_SOURCES],
     { timeout: 5000 },
     (error, stdout) => {
       const committed = Number(String(stdout).trim()) * 1000;
       if (error || !Number.isFinite(committed) || committed <= 0) {
-        return done(newestMtimeUnder(compilerDir));
+        return done(Math.max(...KOMP_SOURCES.map((rel) => newestMtimeUnder(path.join(tree, rel)))));
       }
       execFile(
-        'git', ['-C', tree, 'status', '--porcelain', '--', 'compiler'],
+        'git', ['-C', tree, 'status', '--porcelain', '--', ...KOMP_SOURCES],
         { timeout: 5000 },
         (statusError, statusOut) => {
           if (statusError) return done(committed);
@@ -112,8 +124,14 @@ function newestMtimeOf(tree, statusOutput) {
   return newest;
 }
 
+/// The newest mtime of a file, or of any file below a directory.
 function newestMtimeUnder(dir) {
   let newest = 0;
+  try {
+    if (fs.statSync(dir).isFile()) return fs.statSync(dir).mtimeMs;
+  } catch {
+    return 0;
+  }
   const stack = [dir];
   while (stack.length) {
     const current = stack.pop();
@@ -130,7 +148,7 @@ function newestMtimeUnder(dir) {
       const full = path.join(current, entry.name);
       if (entry.isDirectory()) {
         stack.push(full);
-      } else if (entry.name.endsWith('.kf')) {
+      } else {
         try {
           const at = fs.statSync(full).mtimeMs;
           if (at > newest) newest = at;
@@ -163,7 +181,7 @@ function stalenessOf(kompPath, done) {
   if (!stamp) return done(null);
   const tree = kompTreeAbove(stamp.path);
   if (!tree) return done(null);
-  newestCompilerChange(tree, (newest) => {
+  newestSourceChange(tree, (newest) => {
     if (!newest || stamp.builtMs >= newest) return done(null);
     done({ binary: stamp.path, tree, behindMs: newest - stamp.builtMs });
   });
@@ -173,9 +191,9 @@ module.exports = {
   binaryStamp,
   describeAge,
   kompTreeAbove,
-  newestCompilerChange,
   newestMtimeOf,
   newestMtimeUnder,
+  newestSourceChange,
   resolveBinary,
   stalenessOf,
 };

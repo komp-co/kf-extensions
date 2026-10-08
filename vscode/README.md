@@ -95,11 +95,11 @@ variant, a field and a method, which the grammar cannot. KFlat files turn
 `editor.semanticHighlighting.enabled` on, so they show under a theme that
 leaves it off; set it back per language to prefer the theme's choice.
 
-**A stale compiler.** Every answer is the configured binary's opinion. An
-old one answers with an old compiler's semantics, and a wrong answer looks
-exactly like a right one, so the extension says once per build when the
-binary predates the checkout it came from. The signal is the last *commit*
-to touch `compiler/`, topped up with the mtimes of what `git status` reports
+**A stale komp.** The server, the lenses and the tasks all run through the
+configured komp, and an old one looks exactly like a current one, so the
+extension says once per build when a komp run from its own checkout predates
+it. The signal is the last *commit* to touch `src/`, `native/` or `kf.toml`,
+topped up with the mtimes of what `git status` reports
 as modified, since `git checkout` rewrites the mtime of every file it
 touches. A komp installed from somewhere else is never reported.
 

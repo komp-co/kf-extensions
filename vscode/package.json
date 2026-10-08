@@ -151,7 +151,7 @@
         "kflat.warnOnStaleBinary": {
           "type": "boolean",
           "default": true,
-          "markdownDescription": "Warn when `kflat.kompPath` points inside a komp checkout and was built before that checkout's newest change to `compiler/`. Has no effect on a komp installed from elsewhere, which has no tree to be behind."
+          "markdownDescription": "Warn when `kflat.kompPath` points inside a komp checkout and was built before that checkout's newest change to `src/`, `native/` or `kf.toml`. Has no effect on a komp installed from elsewhere, which has no tree to be behind."
         },
         "kflat.trace.server": {
           "type": "string",

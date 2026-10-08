@@ -186,10 +186,9 @@ async function restartAll() {
 /// as the path re-arms the check when the binary is rebuilt.
 const staleChecked = new Set();
 
-/// A scratch komp under a checkout's `bin/` is a normal setup, and nothing
-/// rebuilds it when the compiler changes. Every answer is that binary's
-/// opinion, and a wrong answer looks exactly like a right one, so say so once
-/// per build.
+/// A komp run from its own checkout is a normal setup, and nothing rebuilds
+/// it when the checkout changes. The server, the lenses and the tasks all go
+/// through that binary, so say once per build when it is behind.
 function warnIfStaleBinary() {
   if (!config().get('warnOnStaleBinary', true)) return;
   const komp = kompPath();
@@ -204,7 +203,7 @@ function warnIfStaleBinary() {
     const name = path.relative(report.tree, report.binary) || report.binary;
     const message =
       `KFlat: ${name} is ${stale.describeAge(report.behindMs)} older than the newest ` +
-      'change to compiler/, so every answer here comes from that older compiler. ' +
+      'change to its checkout, so the server and the lenses run through an older komp. ' +
       'Rebuild it, or turn off kflat.warnOnStaleBinary.';
     output.info(message);
     vscode.window.showWarningMessage(message);
